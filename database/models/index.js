@@ -45,10 +45,6 @@ module.exports = (sequelize) => {
             type: DataTypes.STRING,
             allowNull: false
         },
-        service: {
-            type: DataTypes.STRING,
-            allowNull: false
-        },
         fromStreet: {
             type: DataTypes.STRING,
             allowNull: false

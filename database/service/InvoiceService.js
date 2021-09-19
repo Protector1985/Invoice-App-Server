@@ -7,7 +7,7 @@ class InvoiceService {
         this.models = sequelize.models
     }
     
-    async createInvoice({invoiceNumber, invoiceDateMonth, invoiceDateDay, invoiceDateYear, dueIn, dueDate, recipient, overallProject, amount,  status, service,fromStreet,fromCity, fromZip,fromCountry,toStreet, toCity,toZip,toCountry,toEmail}, ServiceId) {
+    async createInvoice(invoiceNumber, invoiceDateMonth, invoiceDateDay, invoiceDateYear, dueIn, dueDate, recipient, overallProject, amount,  status, fromStreet,fromCity, fromZip,fromCountry,toStreet, toCity,toZip,toCountry,toEmail, ServiceId) {
         try {
             const invoice = await this.models.Invoice.create({
                 invoiceNumber, 
@@ -20,7 +20,6 @@ class InvoiceService {
                 overallProject, 
                 amount, 
                 status, 
-                service,
                 fromStreet,
                 fromCity, 
                 fromZip,
