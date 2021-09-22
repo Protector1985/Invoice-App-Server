@@ -48,6 +48,24 @@ class InvoiceService {
         
     }
 
+    async loadOneEntry (invoiceNumber) {
+        try {
+            const invoice = await this.models.Invoice.update({where: {invoiceNumber: invoiceNumber}})
+            return invoice
+        } catch (error) {
+            return error
+        }
+    }
+
+    async updatePaymentStatus (invoiceNumber, status) {
+        try {
+            const invoice = await this.models.Invoice.update( {status: status}, {where: {invoiceNumber: invoiceNumber}})
+            
+        } catch (error) {
+            return error
+        }
+    }
+
     // async loadOneEntry()
     // async updateEntry()
     // async deleteEntry()

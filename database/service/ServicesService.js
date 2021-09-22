@@ -23,6 +23,15 @@ class ServicesService {
         }  
     }
 
+    async loadRelatedEntries(invoiceNumber) {
+        try {
+            const relatedEntries = await this.models.Services.findAll({where: {InvoiceInvoiceNumber: invoiceNumber}})
+            return relatedEntries
+        }catch (error) {
+            return error
+        }
+    }
+
     // async loadAllEntries()
     // async loadOneEntry()
     // async updateEntry()

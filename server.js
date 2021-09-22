@@ -32,8 +32,6 @@ app.get("/invoice", (req, res, next) => {
 })
 
 app.get("/invoice/fetchAll", async (req, res, next) => {
-    console.log("FEEEEEEEEEEEEEEEEEEEEEEEEETTTTTTTTTTTTTTCHHHHHHHHHHHHHHHHHHHHHHHHHH CAAAAAAAAAAAAAAAAAAAAAAAAAAAAALLLLLLLLLLLLLLLEEEEEEEEEEEEEEEEEEEEDDDDDDDDDDDDDDDDDDDDDDDDD")
-    
     const invoiceService = new InvoiceService(dbConfig.postgres.client)
     const invoices = await invoiceService.fetchAll()
     res.send(invoices)
@@ -92,13 +90,28 @@ app.post("/invoice/submitData", async (req, res, next) => {
     const amount = itemArray.map((item) => item.total).reduce((partial_sum, a) => partial_sum + a,0).toFixed(2)
     const status = req.body.status
  
-    await invoice.createInvoice(invoiceNumber, invoiceDateMonth, day, year, dueIn, dueDate, toName, toProject, amount, status, fromStreet, fromCity, fromZip,fromCountry,toStreet, toCity,toZip,toCountry,toEmail)
+    invoice.createInvoice(invoiceNumber, invoiceDateMonth, day, year, dueIn, dueDate, toName, toProject, amount, status, fromStreet, fromCity, fromZip,fromCountry,toStreet, toCity,toZip,toCountry,toEmail)
     itemArray.map((item) => {
         services.createServicesEntry(item.description, item.qty, item.pricePerItem, item.total, invoiceNumber)
     })
 
-    // invoiceNumber, invoiceDateMonth, invoiceDateDay, invoiceDateYear, dueIn, dueDate, recipient, overallProject,  status, fromStreet,fromCity, fromZip,fromCountry,toStreet, toCity,toZip,toCountry,toEmail
 })
 
+app.get("/invoice/:invoiceNumber", async (req,res,next) => {
+    const invoiceNumber = req.params.invoiceNumber
+    const invoice = new InvoiceService(dbConfig.postgres.client)
+    const services = new ServicesService(dbConfig.postgres.client)
+    const targetInvoice = await invoice.loadOneEntry(invoiceNumber)
+    const relatedServices = await services.loadRelatedEntries(invoiceNumber)
+    console.log(relatedServices)
+    res.send({invoice: targetInvoice, services: relatedServices})   
+})
+
+app.get("/invoice/:invoiceNumber/updatePayment", (res, req, next) => {
+    console.log("UPDAAAAAAATING PAYMENT")
+    
+    // const invoice = new InvoiceService(dbConfig.postgres.client)
+    // const updatePaymentStatus = await invoice.updatePaymentStatus(invoiceNumber, newStatus)
+})
 
 
