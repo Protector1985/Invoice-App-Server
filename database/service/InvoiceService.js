@@ -59,8 +59,15 @@ class InvoiceService {
 
     async updatePaymentStatus (invoiceNumber, status) {
         try {
-            const invoice = await this.models.Invoice.update( {status: status}, {where: {invoiceNumber: invoiceNumber}})   
+            console.log(status)
+            let invoice = await this.models.Invoice.findOne({where: {invoiceNumber: invoiceNumber}})  
+            invoice.status = status
+            invoice.save();
+           
+            
+            // return invoice 
         } catch (error) {
+            console.log("EEEERRROOOOOR")
             return error
         }
     }

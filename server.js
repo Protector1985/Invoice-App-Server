@@ -103,15 +103,20 @@ app.get("/invoice/:invoiceNumber", async (req,res,next) => {
     const services = new ServicesService(dbConfig.postgres.client)
     const targetInvoice = await invoice.loadOneEntry(invoiceNumber)
     const relatedServices = await services.loadRelatedEntries(invoiceNumber)
-    console.log(targetInvoice)
+    
     res.send({invoice: targetInvoice, services: relatedServices})   
 })
 
-app.post("/invoice/:invoiceNumber/updatePayment", (res, req, next) => {
-    console.log("UPDAAAAAAATING PAYMENT")
+app.post("/invoice/:invoiceNumber/updatePayment", async (req, res, next) => {
     
-    // const invoice = new InvoiceService(dbConfig.postgres.client)
-    // const updatePaymentStatus = await invoice.updatePaymentStatus(invoiceNumber, newStatus)
+    const invoiceNumber = req.body.invoiceNumber
+    const newPaymentStatus = req.body.paymentstatus
+    console.log(newPaymentStatus)
+    
+    
+    const invoice = new InvoiceService(dbConfig.postgres.client)
+    const updatedPaymentStatus = await invoice.updatePaymentStatus(invoiceNumber, newPaymentStatus)
+    
 })
 
 
