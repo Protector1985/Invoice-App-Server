@@ -50,7 +50,7 @@ class InvoiceService {
 
     async loadOneEntry (invoiceNumber) {
         try {
-            const invoice = await this.models.Invoice.update({where: {invoiceNumber: invoiceNumber}})
+            const invoice = await this.models.Invoice.findOne({where: {invoiceNumber: invoiceNumber}})
             return invoice
         } catch (error) {
             return error
@@ -59,8 +59,7 @@ class InvoiceService {
 
     async updatePaymentStatus (invoiceNumber, status) {
         try {
-            const invoice = await this.models.Invoice.update( {status: status}, {where: {invoiceNumber: invoiceNumber}})
-            
+            const invoice = await this.models.Invoice.update( {status: status}, {where: {invoiceNumber: invoiceNumber}})   
         } catch (error) {
             return error
         }
