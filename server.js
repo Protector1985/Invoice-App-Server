@@ -111,12 +111,12 @@ app.post("/invoice/:invoiceNumber/updatePayment", async (req, res, next) => {
     
     const invoiceNumber = req.body.invoiceNumber
     const newPaymentStatus = req.body.paymentstatus
-    console.log(newPaymentStatus)
     
     
     const invoice = new InvoiceService(dbConfig.postgres.client)
-    const updatedPaymentStatus = await invoice.updatePaymentStatus(invoiceNumber, newPaymentStatus)
-    
+    const updatedInvoice = await invoice.updatePaymentStatus(invoiceNumber, newPaymentStatus)
+    console.log(updatedInvoice)
+    res.send(updatedInvoice)
 })
 
 

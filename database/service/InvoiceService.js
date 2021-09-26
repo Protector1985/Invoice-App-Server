@@ -59,10 +59,14 @@ class InvoiceService {
 
     async updatePaymentStatus (invoiceNumber, status) {
         try {
-            console.log(status)
-            let invoice = await this.models.Invoice.findOne({where: {invoiceNumber: invoiceNumber}})  
-            invoice.status = status
-            invoice.save();
+            let invoice = await this.models.Invoice.update({status: status}, {where: {invoiceNumber: invoiceNumber}})  
+            
+            const inv = await this.models.Invoice.findOne({where:{invoiceNumber: invoiceNumber}})
+            if(inv.status === invoice.status) {
+                throw new Error("SOMETHING WENT WRONG WHILE UPDATING THE DB")
+            } else {
+                return inv
+            }
            
             
             // return invoice 
