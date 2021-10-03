@@ -2,8 +2,19 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const dbConfig = require('./config/dbConfig')
 const dbConnect = require('./database/connection/dbConnect')
+const crypto = require('crypto')
 const cors = require('cors')
+const {Server} = require("socket.io")
+const eventEmitter = dbConfig.postgres.eventEmitter
 const app = express();
+const PORT = process.env.PORT || 5000
+
+const server = app.listen(PORT, () => {
+    console.log(`Server running on ${PORT}`)
+})
+
+const io = new Server(server)
+
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 app.use(cors()) //CHANGE THIS LATER!!!!! DON'T ALLOW ALL ORIGINS!!!!!
@@ -16,33 +27,49 @@ app.use(bodyParser.json())
 const InvoiceService = require('./database/service/InvoiceService');
 const ServicesService = require('./database/service/ServicesService')
 
-const PORT = process.env.PORT || 5000
 
-app.listen(PORT, () => {
-    console.log(`Server running on ${PORT}`)
-})
+
+
 
 dbConnect(dbConfig)
 
+
+
+
+
+io.on("connection", (socket) => {
+    eventEmitter.on("fetchAll", (data)=> {
+        console.log(data)
+        const id = crypto.randomBytes(20).toString('hex')
+        socket.emit("FETCH_ALL", id)
+    })
+
+
+
+    socket.on("disconnect", ()=> {
+        console.log("A user disconnected")
+    })
+})
+
+
 app.get("/invoice", (req, res, next) => {
-    console.log("reqest with postman")
     const invoice = new InvoiceService(dbConfig.postgres.client)
     const services = new ServicesService(dbConfig.postgres.client)
     res.send({inv: invoice, srv: services})
 })
 
 app.get("/invoice/fetchAll", async (req, res, next) => {
-    const invoiceService = new InvoiceService(dbConfig.postgres.client)
+    const invoiceService = new InvoiceService(dbConfig.postgres.client, dbConfig.postgres.eventEmitter)
     const invoices = await invoiceService.fetchAll()
-    res.send(invoices)
+    console.log(invoices.length)
+    return res.send(invoices)
 })
 
 app.post("/invoice/invoiceEntry", (req, res, next) => {
     const items = req.body.itemsPurchased
-    const invoiceService = new InvoiceService(dbConfig.postgres.client)
+    const invoiceService = new InvoiceService(dbConfig.postgres.client, dbConfig.postgres.eventEmitter)
     const services = new ServicesService(dbConfig.postgres.client)
-    const invoice = invoiceService.createInvoice(req.body)
-    console.log(items[0])
+    const invoice = invoiceService.createInvoice(req.body, eventEmitter)
     for(let i = 0 ; i < items.length ; i ++ )  {
         services.createServicesEntry(items[i].description, items[i].qty, items[i].pricePerItem, items[i].total, req.body.invoiceNumber)
         
@@ -56,15 +83,14 @@ app.post("/invoice/servicesEntry", (req, res, next)=> {
     const qty = req.body.qty
     const pricePerItem = req.body.pricePerItem
     const total = req.body.total
-    const invoice = new InvoiceService(dbConfig.postgres.client)
+    const invoice = new InvoiceService(dbConfig.postgres.client, dbConfig.postgres.eventEmitter)
     const services = new ServicesService(dbConfig.postgres.client)
     const service = services.createServicesEntry(invoiceNumber, description, qty, pricePerItem, total, invoice.invoiceNumber)
     res.send({invoice, service})
 })
 
 app.post("/invoice/submitData", async (req, res, next) => {
-    console.log(req.body)
-    const invoice = new InvoiceService(dbConfig.postgres.client)
+    const invoice = new InvoiceService(dbConfig.postgres.client, dbConfig.postgres.eventEmitter)
     const services = new ServicesService(dbConfig.postgres.client)
     const dateTime = new Date(req.body.isoDate)
     const invoiceDateMonth = dateTime.toLocaleString("default", {month: "short"})
@@ -99,7 +125,7 @@ app.post("/invoice/submitData", async (req, res, next) => {
 
 app.get("/invoice/:invoiceNumber", async (req,res,next) => {
     const invoiceNumber = req.params.invoiceNumber
-    const invoice = new InvoiceService(dbConfig.postgres.client)
+    const invoice = new InvoiceService(dbConfig.postgres.client, dbConfig.postgres.eventEmitter)
     const services = new ServicesService(dbConfig.postgres.client)
     const targetInvoice = await invoice.loadOneEntry(invoiceNumber)
     const relatedServices = await services.loadRelatedEntries(invoiceNumber)
@@ -107,16 +133,26 @@ app.get("/invoice/:invoiceNumber", async (req,res,next) => {
     res.send({invoice: targetInvoice, services: relatedServices})   
 })
 
-app.post("/invoice/:invoiceNumber/updatePayment", async (req, res, next) => {
-    
+app.post("/invoice/:invoiceNumber/command", async (req, res, next) => {
+    const invoice = new InvoiceService(dbConfig.postgres.client, dbConfig.postgres.eventEmitter)
     const invoiceNumber = req.body.invoiceNumber
-    const newPaymentStatus = req.body.paymentstatus
+    switch (req.body.command) {
+        case "PAYMENT_METHOD_UPDATE":
+            const newPaymentStatus = req.body.paymentstatus
+            const updatedInvoice = await invoice.updatePaymentStatus(invoiceNumber, newPaymentStatus)
+            res.send(updatedInvoice)
+            break;
+        case "DELETE_INVOICE_COMMAND":
+            await invoice.deleteInvoice(invoiceNumber)
+            console.log("DEEEEEEEEEEEEEELLLLLLLLEEEEEEEEEEEEEETTTTTTTEEEEEEEEEEEEEEEEe")
+            break;
+    }
     
-    
-    const invoice = new InvoiceService(dbConfig.postgres.client)
-    const updatedInvoice = await invoice.updatePaymentStatus(invoiceNumber, newPaymentStatus)
-    console.log(updatedInvoice)
-    res.send(updatedInvoice)
 })
 
+
+app.post("/invoice/:invoiceNumber/deleteInvoice", (req, res, next)=> {
+    const invoiceNumber = req.body.invoicenumber;
+
+})
 

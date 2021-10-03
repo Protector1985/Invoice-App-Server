@@ -1,3 +1,7 @@
+const EventEmitter = require("events")
+
+const eventEmitter = new EventEmitter()
+
 module.exports = {
     postgres: {
         options: {
@@ -8,6 +12,7 @@ module.exports = {
             password: 'admin',
             dialect: 'postgres',
         },
-        client: null
+        client: null,
+        eventEmitter: eventEmitter
     }
 }
