@@ -1,10 +1,11 @@
 const Models = require('../models/index.js')
 
 class ServicesService {
-    constructor(sequelize) {
+    constructor(sequelize, eventEmitter) {
         Models(sequelize) 
         this.client = sequelize.client,
-        this.models = sequelize.models  
+        this.models = sequelize.models,
+        this.eventEmitter = eventEmitter
     }
 
     async createServicesEntry(description, qty, pricePerItem, total, InvoiceInvoiceNumber) {
@@ -29,6 +30,31 @@ class ServicesService {
             return relatedEntries
         }catch (error) {
             return error
+        }
+    }
+
+    async deleteAll(invoiceNumber) {
+        try {
+            const entries = await this.models.Services.destroy({where:{InvoiceInvoiceNumber: null}})
+            this.eventEmitter.emit("fetchAll")
+        } catch (err) {
+            return err
+        }
+    }
+
+    async updateFields(id, description, qty, pricePerItem, total) {
+        try {
+            await this.models.Services.update({
+                description: description,
+                qty: qty,
+                pricePerItem: pricePerItem,
+                total: total,  
+            }, {where: {
+                id: id,
+            }})
+            this.eventEmitter.emit("fetchAll")
+        } catch (err) {
+            console.log(err)
         }
     }
 

@@ -29,12 +29,7 @@ const ServicesService = require('./database/service/ServicesService')
 
 
 
-
-
 dbConnect(dbConfig)
-
-
-
 
 
 io.on("connection", (socket) => {
@@ -135,7 +130,30 @@ app.get("/invoice/:invoiceNumber", async (req,res,next) => {
 
 app.post("/invoice/:invoiceNumber/command", async (req, res, next) => {
     const invoice = new InvoiceService(dbConfig.postgres.client, dbConfig.postgres.eventEmitter)
-    const invoiceNumber = req.body.invoiceNumber
+    const services = new ServicesService(dbConfig.postgres.client, dbConfig.postgres.eventEmitter)
+    const dateTime = new Date(req.body.isoDate)
+    const invoiceDateMonth = dateTime.toLocaleString("default", {month: "short"})
+    const day = dateTime.getDate()
+    const year = dateTime.getFullYear()
+    const invoiceNumber = req.body.invoiceNumber;
+    const fromStreet= req.body.fromStreet;
+    const fromCity= req.body.fromCity;
+    const fromZip= req.body.fromZip;
+    const fromCountry= req.body.fromCountry;
+    const toName= req.body.toName;
+    const toEmail= req.body.toEmail;
+    const toStreet= req.body.toStreet;
+    const toCity= req.body.toCity;
+    const toZip= req.body.toZip;
+    const toCountry= req.body.toCountry;
+    const toProject= req.body.toProject;
+    const itemArray= req.body.itemArray;
+    const isoDate= req.body.isoDate;
+    const dueDate = `${day} ${invoiceDateMonth} ${year}`
+    const dueIn= req.body.dueIn
+    const amount = itemArray.map((item) => item.total).reduce((partial_sum, a) => partial_sum + a,0).toFixed(2)
+    const status = req.body.status
+    const items = req.body.items
     switch (req.body.command) {
         case "PAYMENT_METHOD_UPDATE":
             const newPaymentStatus = req.body.paymentstatus
@@ -144,15 +162,20 @@ app.post("/invoice/:invoiceNumber/command", async (req, res, next) => {
             break;
         case "DELETE_INVOICE_COMMAND":
             await invoice.deleteInvoice(invoiceNumber)
-            console.log("DEEEEEEEEEEEEEELLLLLLLLEEEEEEEEEEEEEETTTTTTTEEEEEEEEEEEEEEEEe")
+            await services.deleteAll(invoiceNumber)
+            break;
+        case "UPDATE_FIELDS":
+            await invoice.updateFields(invoiceNumber, invoiceDateMonth, day, year, dueIn, dueDate, toName, toProject, amount,  status, fromStreet,fromCity, fromZip,fromCountry,toStreet, toCity,toZip,toCountry,toEmail, toName, toProject)
+            items.map( async (item, index, arr) => {
+                
+                await services.updateFields(item.id, item.description, item.qty, item.pricePerItem, item.total)
+            })
+            
             break;
     }
     
 })
 
 
-app.post("/invoice/:invoiceNumber/deleteInvoice", (req, res, next)=> {
-    const invoiceNumber = req.body.invoicenumber;
 
-})
 

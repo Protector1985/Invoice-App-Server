@@ -11,7 +11,7 @@ class InvoiceService {
         this.eventEmitter = eventEmitter
     }
     
-    async createInvoice(invoiceNumber, invoiceDateMonth, invoiceDateDay, invoiceDateYear, dueIn, dueDate, recipient, overallProject, amount,  status, fromStreet,fromCity, fromZip,fromCountry,toStreet, toCity,toZip,toCountry,toEmail, ServiceId) {
+    async createInvoice(invoiceNumber, invoiceDateMonth, invoiceDateDay, invoiceDateYear, dueIn, dueDate, recipient, overallProject, amount,  status, fromStreet,fromCity, fromZip,fromCountry,toStreet, toCity,toZip,toCountry,toEmail, ServiceId, isoDate) {
         try {
             const invoice = await this.models.Invoice.create({
                 invoiceNumber, 
@@ -33,6 +33,7 @@ class InvoiceService {
                 toZip,
                 toCountry,
                 toEmail,
+                isoDate,
                 ServiceId,
             });
             this.eventEmitter.emit("fetchAll", invoice)
@@ -89,9 +90,38 @@ class InvoiceService {
         }
     }
     
-    // async updateEntry()
-    
+    async updateFields(invoiceNumber, invoiceDateMonth, invoiceDateDay, invoiceDateYear, dueIn, dueDate, recipient, overallProject, amount,  status, fromStreet,fromCity, fromZip,fromCountry,toStreet, toCity,toZip,toCountry,toEmail, toName, toProject) {
+        try {
+            await this.models.Invoice.update({
+                invoiceDateMonth: invoiceDateMonth,
+                invoiceDateDay: invoiceDateDay,
+                invoiceDateYear: invoiceDateYear,
+                dueIn: dueIn,
+                dueDate: dueDate, 
+                recipient: recipient, 
+                overallProject: overallProject,
+                amount: amount,  
+                status: status,
+                fromStreet: fromStreet,
+                fromCity: fromCity, 
+                fromZip: fromZip,
+                fromCountry: fromCountry,
+                toStreet: toStreet,
+                toCity: toCity,
+                toZip: toZip,
+                toCountry: toCountry,
+                toEmail: toEmail,
+                toName: toName,
+                toProject: toProject,
+                toStreet: toStreet,
 
+            }, {where: {invoiceNumber: invoiceNumber}})
+                this.eventEmitter.emit("fetchAll")
+        } catch (err) {
+            console.log(err)
+        }
+    }
+        
 }
 
 module.exports=InvoiceService
