@@ -129,6 +129,8 @@ app.get("/invoice/:invoiceNumber", async (req,res,next) => {
 })
 
 app.post("/invoice/:invoiceNumber/command", async (req, res, next) => {
+    
+    
     const invoice = new InvoiceService(dbConfig.postgres.client, dbConfig.postgres.eventEmitter)
     const services = new ServicesService(dbConfig.postgres.client, dbConfig.postgres.eventEmitter)
     const dateTime = new Date(req.body.isoDate)
@@ -151,28 +153,68 @@ app.post("/invoice/:invoiceNumber/command", async (req, res, next) => {
     const isoDate= req.body.isoDate;
     const dueDate = `${day} ${invoiceDateMonth} ${year}`
     const dueIn= req.body.dueIn
-    const amount = itemArray.map((item) => item.total).reduce((partial_sum, a) => partial_sum + a,0).toFixed(2)
+    
     const status = req.body.status
     const items = req.body.items
+    const destroy = req.body.destroy
+
+    
+    const shouldDestroy = destroy !== undefined ? destroy.length >= 1 ? true : false : null
+    const amount = itemArray !== undefined ? itemArray.map((item) => item.total).reduce((partial_sum, a) => partial_sum + a,0).toFixed(2) : null
+
+   
+    
+
+    
+
     switch (req.body.command) {
         case "PAYMENT_METHOD_UPDATE":
-            const newPaymentStatus = req.body.paymentstatus
-            const updatedInvoice = await invoice.updatePaymentStatus(invoiceNumber, newPaymentStatus)
-            res.send(updatedInvoice)
-            break;
+            try {
+                const newPaymentStatus = req.body.paymentstatus
+                const updatedInvoice = await invoice.updatePaymentStatus(invoiceNumber, newPaymentStatus)
+                res.send(updatedInvoice)
+                break;
+
+            } catch (error) {
+                console.log(error)
+                break
+            }
+            
         case "DELETE_INVOICE_COMMAND":
-            await invoice.deleteInvoice(invoiceNumber)
-            await services.deleteAll(invoiceNumber)
-            break;
+            try {
+                await invoice.deleteInvoice(invoiceNumber)
+                await services.deleteAll(invoiceNumber)
+                break;
+
+            } catch (error) {
+                console.log(error)
+                break;
+            }
+            
         case "UPDATE_FIELDS":
+
+        try {
             await invoice.updateFields(invoiceNumber, invoiceDateMonth, day, year, dueIn, dueDate, toName, toProject, amount,  status, fromStreet,fromCity, fromZip,fromCountry,toStreet, toCity,toZip,toCountry,toEmail, toName, toProject)
             items.map( async (item, index, arr) => {
-                
-                await services.updateFields(item.id, item.description, item.qty, item.pricePerItem, item.total)
+                await services.updateFields(item.id, item.description, item.qty, item.pricePerItem, item.total).catch((err) => console.log(err))
+                await services.createServicesEntry(item.description, item.qty, item.pricePerItem, item.total, invoiceNumber , item.id).catch((err) => console.log(err))
             })
-            
+                if (shouldDestroy) {
+                    destroy.map(async(id) => {
+                        await services.deleteOne(id)
+                    })
+                break; 
+                }
             break;
+
+        } catch (err) {
+            console.log(err)
+            break;
+        }
+            
     }
+
+
     
 })
 

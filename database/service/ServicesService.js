@@ -8,14 +8,15 @@ class ServicesService {
         this.eventEmitter = eventEmitter
     }
 
-    async createServicesEntry(description, qty, pricePerItem, total, InvoiceInvoiceNumber) {
+    async createServicesEntry(description, qty, pricePerItem, total, InvoiceInvoiceNumber, id) {
         try {
             const services = this.models.Services.create({
                 description, 
                 qty, 
                 pricePerItem, 
                 total,
-                InvoiceInvoiceNumber 
+                InvoiceInvoiceNumber,
+                id 
             })
             return services
         } catch(error) {
@@ -58,6 +59,15 @@ class ServicesService {
         }
     }
 
+    async deleteOne(id) {
+        try {
+            await this.models.Services.destroy({where: {id: id}})
+            this.eventEmitter.emit("fetchAll")
+
+        } catch(error) {
+            console.log(error)
+        }
+    }
     // async loadAllEntries()
     // async loadOneEntry()
     // async updateEntry()

@@ -87,8 +87,8 @@ module.exports = (sequelize) => {
         id: {
             type: DataTypes.UUID,
             defaultValue: DataTypes.UUIDV4,
+            unique: true,
             primaryKey: true,
-
         },
         description:{
             type: DataTypes.STRING,
@@ -100,6 +100,10 @@ module.exports = (sequelize) => {
         },
         pricePerItem: {
             type: DataTypes.FLOAT,
+            allowNull: false
+        },
+        InvoiceInvoiceNumber: {
+            type: DataTypes.STRING,
             allowNull: false
         },
         total: {

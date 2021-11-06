@@ -86,6 +86,7 @@ class InvoiceService {
             const invoice = await this.models.Invoice.destroy({where:{invoiceNumber: invoiceNumber}})
             this.eventEmitter.emit("fetchAll")
         } catch(err) {
+            console.log(err)
             return err
         }
     }
