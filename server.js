@@ -1,3 +1,4 @@
+require('dotenv').config()
 const express = require('express')
 const bodyParser = require('body-parser')
 const dbConfig = require('./config/dbConfig')
@@ -7,7 +8,9 @@ const cors = require('cors')
 const {Server} = require("socket.io")
 const eventEmitter = dbConfig.postgres.eventEmitter
 const app = express();
+
 const PORT = process.env.PORT || 5000
+
 
 const server = app.listen(PORT, () => {
     console.log(`Server running on ${PORT}`)
