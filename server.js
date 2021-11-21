@@ -5,12 +5,10 @@ const dbConfig = require('./config/dbConfig')
 const dbConnect = require('./database/connection/dbConnect')
 const crypto = require('crypto')
 const cors = require('cors')
-const {Server} = require("socket.io")(httpServer, {
-    cors: {
-      origin: "http://localhost:3000",
-      methods: ["GET", "POST"]
-    }
-  });
+const {Server} = require("socket.io")
+
+
+
 const eventEmitter = dbConfig.postgres.eventEmitter
 const app = express();
 
@@ -21,7 +19,13 @@ const server = app.listen(PORT, () => {
     console.log(`Server running on ${PORT}`)
 })
 
-const io = new Server(server)
+const io = new Server(server, {
+    cors: {
+      origin: "https://localhost:3000",
+      methods: ["GET", "POST"]
+    }})
+
+
 
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
